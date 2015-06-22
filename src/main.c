@@ -2,7 +2,8 @@
 #include "bsp.h"
 #include "app_scheduler.h"
 #include "ble_advertising.h"
-#include "app_timer.h"
+#include "app_timer_appsh.h"
+#include "softdevice_handler.h"
 #include "nrf_delay.h"
 
 #define SCHED_MAX_EVENT_DATA_SIZE       sizeof(app_timer_event_t)                   /**< Maximum size of scheduler events. Note that scheduler BLE stack events do not contain any data, as the events are being pulled from the stack in the event handler. */
@@ -12,7 +13,6 @@
 
 static void bsp_module_init(void);
 static void scheduler_init(void);
-static void timers_init(void);
 static void power_manage(void);
 
 int main()
@@ -22,6 +22,7 @@ int main()
 	// Initialize
     timers_init();
 	ble_stack_init();
+    bsp_module_init();
 	scheduler_init();
 	gap_params_init();
 	advertising_init();

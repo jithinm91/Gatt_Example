@@ -273,7 +273,7 @@ static void sleep_mode_enter(void)
 
 /**@brief Function for initializing services that will be used by the application.
  */
-static void services_init(void)
+void services_init(void)
 {
     // YOUR_JOB: Add code to initialize the services used by the application.
 }
@@ -346,7 +346,7 @@ void sec_params_init(void)
  *
  * @details Initializes the timer module.
  */
-static void timers_init(void)
+void timers_init(void)
 {
     // Initialize timer module, making it use the scheduler
     APP_TIMER_APPSH_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, true);
