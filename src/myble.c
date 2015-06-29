@@ -7,7 +7,7 @@
 #include "ble_conn_params.h"
 #include "app_timer_appsh.h"
 #include "ble_hci.h"
-
+#include "app_uart.h"
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0	/**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 #define DEVICE_NAME                     "Jithin"                           /**< Name of device. Will be included in the advertising data. */
 
@@ -41,6 +41,9 @@
 #define SEC_PARAM_MIN_KEY_SIZE          7                                           /**< Minimum encryption key size. */
 #define SEC_PARAM_MAX_KEY_SIZE          16                                          /**< Maximum encryption key size. */
 
+#define UART_TX_BUF_SIZE                256                                         /**< UART TX buffer size. */
+#define UART_RX_BUF_SIZE                256                                         /**< UART RX buffer size. */
+
 static void sleep_mode_enter(void);
 static void on_adv_evt(ble_adv_evt_t ble_adv_evt);
 static void on_conn_params_evt(ble_conn_params_evt_t * p_evt);
@@ -51,6 +54,8 @@ ble_uuid_t m_adv_uuids[] = {{BLE_UUID_BATTERY_SERVICE, BLE_UUID_TYPE_BLE}};
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 static ble_gap_sec_params_t             m_sec_params;                               /**< Security requirements for this application. */
 
+void uart_event_handle(app_uart_evt_t * p_event);
+    
 /**@brief Function for handling the Application's BLE Stack events.
  *
  * @param[in]   p_ble_evt   Bluetooth stack event.
@@ -135,7 +140,8 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
 	on_ble_evt(p_ble_evt);
-	
+	ble_conn_params_on_ble_evt(p_ble_evt);
+    ble_advertising_on_ble_evt(p_ble_evt);
 }
 	
 /**@brief Function for dispatching a system event to interested modules.
@@ -195,6 +201,9 @@ void gap_params_init()
 													strlen(DEVICE_NAME));
 	APP_ERROR_CHECK(err_code);
 	
+    err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_UNKNOWN );
+    APP_ERROR_CHECK(err_code);
+    
 	memset(&gap_conn_params, 0, sizeof(gap_conn_params));
 	
 	gap_conn_params.min_conn_interval = MIN_CONN_INTERVAL;
@@ -350,4 +359,85 @@ void timers_init(void)
 {
     // Initialize timer module, making it use the scheduler
     APP_TIMER_APPSH_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, true);
+}
+
+/**@brief Function for initializing bsp module.
+ */
+static void bsp_module_init(void)
+{
+    uint32_t err_code;
+    err_code = bsp_init(BSP_INIT_LED | BSP_INIT_BUTTONS, APP_TIMER_TICKS(100, APP_TIMER_PRESCALER), NULL);
+    printf("%d\n",err_code);
+    //APP_ERROR_CHECK(err_code);
+}
+
+/**@brief  Function for initializing the UART module.
+ */
+/**@snippet [UART Initialization] */
+static void uart_init(void)
+{
+    uint32_t                     err_code;
+    const app_uart_comm_params_t comm_params =
+    {
+        RX_PIN_NUMBER,
+        TX_PIN_NUMBER,
+        RTS_PIN_NUMBER,
+        CTS_PIN_NUMBER,
+        APP_UART_FLOW_CONTROL_DISABLED,
+        false,
+        UART_BAUDRATE_BAUDRATE_Baud38400
+    };
+
+    APP_UART_FIFO_INIT( &comm_params,
+                       UART_RX_BUF_SIZE,
+                       UART_TX_BUF_SIZE,
+                       uart_event_handle,
+                       APP_IRQ_PRIORITY_LOW,
+                       err_code);
+    APP_ERROR_CHECK(err_code);
+}
+
+/**@brief   Function for handling app_uart events.
+ *
+ * @details This function will receive a single character from the app_uart module and append it to 
+ *          a string. The string will be be sent over BLE when the last character received was a 
+ *          'new line' i.e '\n' (hex 0x0D) or if the string has reached a length of 
+ *          @ref NUS_MAX_DATA_LENGTH.
+ */
+/**@snippet [Handling the data received over UART] */
+void uart_event_handle(app_uart_evt_t * p_event)
+{
+    switch (p_event->evt_type)
+    {
+        case APP_UART_COMMUNICATION_ERROR:
+            APP_ERROR_HANDLER(p_event->data.error_communication);
+            break;
+
+        case APP_UART_FIFO_ERROR:
+            APP_ERROR_HANDLER(p_event->data.error_code);
+            break;
+
+        default:
+            break;
+    }
+}
+
+void myble_init(void)
+{
+    uint32_t err_code;
+    
+    timers_init();
+    uart_init();
+	ble_stack_init();
+    bsp_module_init();
+    gap_params_init();
+	advertising_init();
+	services_init();
+    conn_params_init();
+    sec_params_init();
+    
+    printf("starting\n");
+    
+    err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
+    APP_ERROR_CHECK(err_code);
 }

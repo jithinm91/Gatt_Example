@@ -5,3 +5,4 @@ void services_init(void);
 void conn_params_init(void);
 void sec_params_init(void);
 void timers_init(void);
+void myble_init(void);

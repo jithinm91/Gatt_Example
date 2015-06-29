@@ -349,14 +349,15 @@ eil_v5\ARM\PACK\NordicSemiconductor\nRF_Drivers\3.0.0\pstorage -IC:\Keil_v5\ARM
 \PACK\NordicSemiconductor\nRF_Drivers\3.0.0\uart -IC:\Keil_v5\ARM\PACK\NordicSe
 miconductor\nRF_Examples\8.1.1\bsp -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nR
 F_Libraries\3.0.0\button -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Librarie
-s\3.0.0\scheduler -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\3.0.0
-\timer -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\3.0.0\trace -IC:
-\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\3.0.0\util -IC:\Keil_v5\ARM
-\PACK\NordicSemiconductor\nRF_SoftDevice_Common\1.1.3\softdevice_handler -IC:\K
-eil_v5\ARM\PACK\NordicSemiconductor\nRF_SoftDevice_S110\8.0.1\headers --predefi
-ne="__MICROLIB SETA 1" --predefine="__UVISION_VERSION SETA 514" --predefine="_R
-TE_ SETA 1" --predefine="NRF51 SETA 1" --list=.\listings\arm_startup_nrf51.lst 
-RTE\Device\nRF51422_xxAC\arm_startup_nrf51.s
+s\3.0.0\fifo -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\3.0.0\sche
+duler -IC:\Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\3.0.0\timer -IC:\
+Keil_v5\ARM\PACK\NordicSemiconductor\nRF_Libraries\3.0.0\trace -IC:\Keil_v5\ARM
+\PACK\NordicSemiconductor\nRF_Libraries\3.0.0\util -IC:\Keil_v5\ARM\PACK\Nordic
+Semiconductor\nRF_SoftDevice_Common\1.1.3\softdevice_handler -IC:\Keil_v5\ARM\P
+ACK\NordicSemiconductor\nRF_SoftDevice_S110\8.0.1\headers --predefine="__MICROL
+IB SETA 1" --predefine="__UVISION_VERSION SETA 515" --predefine="_RTE_ SETA 1" 
+--predefine="NRF51 SETA 1" --list=.\listings\arm_startup_nrf51.lst RTE\Device\n
+RF51422_xxAC\arm_startup_nrf51.s
 
 
 
