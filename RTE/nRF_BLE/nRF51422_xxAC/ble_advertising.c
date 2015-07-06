@@ -345,7 +345,7 @@ uint32_t ble_advertising_start(ble_adv_mode_t advertising_mode)
     if (m_evt_handler != NULL)
     {
         m_evt_handler(m_adv_evt);
-    }
+    }   
 
     return NRF_SUCCESS;
 }

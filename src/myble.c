@@ -8,8 +8,10 @@
 #include "app_timer_appsh.h"
 #include "ble_hci.h"
 #include "app_uart.h"
-#define IS_SRVC_CHANGED_CHARACT_PRESENT 0	/**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
-#define DEVICE_NAME                     "Jithin"                           /**< Name of device. Will be included in the advertising data. */
+#include "SEGGER_RTT.h"
+
+#define IS_SRVC_CHANGED_CHARACT_PRESENT 1	                                        /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
+#define DEVICE_NAME                     "JithinFinroboticsR"                        /**< Name of device. Will be included in the advertising data. */
 
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(500, UNIT_1_25_MS)            /**< Minimum acceptable connection interval (0.5 seconds). */
 #define MAX_CONN_INTERVAL               MSEC_TO_UNITS(1000, UNIT_1_25_MS)           /**< Maximum acceptable connection interval (1 second). */
@@ -195,13 +197,29 @@ void gap_params_init()
 	ble_gap_conn_params_t gap_conn_params;
 	ble_gap_conn_sec_mode_t sec_mode;
 	
+    ble_gap_addr_t addr;
+         
+    err_code = sd_ble_gap_address_get(&addr);
+    APP_ERROR_CHECK(err_code);
+      
+    addr.addr_type=BLE_GAP_ADDR_TYPE_PUBLIC;
+    addr.addr[5]=0x80;
+    addr.addr[4]=0xB3;
+    addr.addr[3]=0xD5;
+    addr.addr[2]=0x0C;
+    addr.addr[1]&=0x0f;
+    addr.addr[1]|=0x80;
+	 
+
+  	err_code = sd_ble_gap_address_set(BLE_GAP_ADDR_CYCLE_MODE_NONE, &addr);
+    APP_ERROR_CHECK(err_code);
+    
 	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
 	
-	err_code = sd_ble_gap_device_name_set(&sec_mode, (const uint8_t *)DEVICE_NAME,
-													strlen(DEVICE_NAME));
+	err_code = sd_ble_gap_device_name_set(&sec_mode, (const uint8_t *)DEVICE_NAME, strlen(DEVICE_NAME));
 	APP_ERROR_CHECK(err_code);
 	
-    err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_UNKNOWN );
+    err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_UNKNOWN);
     APP_ERROR_CHECK(err_code);
     
 	memset(&gap_conn_params, 0, sizeof(gap_conn_params));
@@ -225,18 +243,38 @@ void advertising_init(void)
 	// Build advertising data struct to pass into @ref ble_advertising_init.
 	memset(&advdata, 0, sizeof(advdata));
 	
-	advdata.name_type = BLE_ADVDATA_FULL_NAME;
-	advdata.include_appearance = true;
+    ble_advdata_manuf_data_t        manuf_data; // Variable to hold manufacturer specific data
+    uint8_t data[]                      = {1,2,3}; // Our data to adverise
+    manuf_data.data.p_data              = data;     
+    manuf_data.data.size                = sizeof(data);
+    
+	advdata.name_type = BLE_ADVDATA_SHORT_NAME;
+    advdata.short_name_len = 2; // Advertise only first 6 letters of name
+	advdata.include_appearance = false;
 	advdata.flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
 	advdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
     advdata.uuids_complete.p_uuids  = m_adv_uuids;
-
+    advdata.p_manuf_specific_data   = &manuf_data;                              // Load the manufacturer specific data into advertising packet
+    
     ble_adv_modes_config_t options = {0};
     options.ble_adv_fast_enabled  = BLE_ADV_FAST_ENABLED;
     options.ble_adv_fast_interval = APP_ADV_INTERVAL;
     options.ble_adv_fast_timeout  = APP_ADV_TIMEOUT_IN_SECONDS;
 
-    err_code = ble_advertising_init(&advdata, NULL, &options, on_adv_evt, NULL);
+    ble_advdata_manuf_data_t manuf_data_response;
+    uint8_t data_response[]                      = {4,5,6}; // Our data to adverise
+    manuf_data_response.data.p_data              = data_response;     
+    manuf_data_response.data.size                = sizeof(data_response);
+    
+    ble_advdata_t advdata_response;
+    
+    // Always initialize all fields in structs to zero or you might get unexpected behaviour
+    memset(&advdata_response, 0, sizeof(advdata_response));
+    
+    advdata_response.name_type = BLE_ADVDATA_NO_NAME;
+    advdata_response.p_manuf_specific_data       = &manuf_data_response;                              // Load the manufacturer specific data into advertising packet
+    
+    err_code = ble_advertising_init(&advdata, &advdata_response, &options, on_adv_evt, NULL);
     APP_ERROR_CHECK(err_code);
 }
 	
@@ -440,4 +478,6 @@ void myble_init(void)
     
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
+    
+    SEGGER_RTT_printf(0, "%d\n", APP_TIMER_TICKS(22, APP_TIMER_PRESCALER));
 }
